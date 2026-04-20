@@ -1,5 +1,7 @@
 # AutoACCT — Bookkeeping Skill for Claude Code
 
+**English** | [简体中文](README.zh-CN.md)
+
 A [Claude Code](https://claude.com/claude-code) skill that turns a receipt image (optionally with a caption) into a structured row in a Google Sheet, with automatic HKD conversion.
 
 Intended to be invoked manually inside Claude Code today, and wired up to a WhatsApp webhook later.
