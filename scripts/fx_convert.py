@@ -22,8 +22,9 @@ def fetch_rate(currency: str, on_date: str) -> tuple[float, str]:
     currency = currency.upper()
     if currency == "HKD":
         return 1.0, on_date
-    url = f"https://api.frankfurter.app/{on_date}?from={currency}&to=HKD"
-    with urllib.request.urlopen(url, timeout=10) as resp:
+    url = f"https://api.frankfurter.dev/v1/{on_date}?from={currency}&to=HKD"
+    req = urllib.request.Request(url, headers={"User-Agent": "AutoACCT/1.0"})
+    with urllib.request.urlopen(req, timeout=10) as resp:
         data = json.loads(resp.read())
     rate = data["rates"]["HKD"]
     return float(rate), data["date"]
