@@ -1,0 +1,6 @@
+{
+  "sheet_id": "PUT_GOOGLE_SHEET_ID_HERE",
+  "worksheet": "Expenses",
+  "service_account_path": "~/.config/gcp/bookkeeping-sa.json",
+  "hkd_fx_provider": "frankfurter"
+}
