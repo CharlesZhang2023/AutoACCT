@@ -26,7 +26,7 @@ pip install google-api-python-client google-auth
 
 ## 4. Skill config
 ```
-cd ~/.claude/skills/bookkeeping
+cd ~/.openclaw/workspace/skills/bookkeeping
 cp config.example.json config.json
 # edit config.json: sheet_id, service_account_path
 ```
@@ -34,6 +34,6 @@ cp config.example.json config.json
 ## 5. Sanity check
 ```
 echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' \
-  | python ~/.claude/skills/bookkeeping/scripts/append_row.py
+  | python ~/.openclaw/workspace/skills/bookkeeping/scripts/append_row.py
 ```
 You should see `OK Expenses!A2:N2` (or similar) and a new row in the sheet. Delete the TEST row when done.

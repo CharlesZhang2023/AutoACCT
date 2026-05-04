@@ -1,10 +1,10 @@
-# AutoACCT — Claude Code 记账 Skill
+# AutoACCT for OpenClaw
 
 [English](README.md) | **简体中文**
 
-一个 [Claude Code](https://claude.com/claude-code) skill，把小票照片（可附文字说明）自动变成 Google Sheet 里结构化的一行记录，并按当日 ECB 汇率换算为港币。
+一个 OpenClaw skill，把小票照片（可附文字说明）自动变成 Google Sheet 里结构化的一行记录，并按当日 ECB 汇率换算为港币。
 
-目前在 Claude Code 中手动调用；后续计划接入 WhatsApp webhook 实现真正的"发张图就记账"。
+目前在 OpenClaw 中手动调用；后续计划接入 WhatsApp webhook 实现真正的"发张图就记账"。
 
 ## 功能
 
@@ -21,7 +21,7 @@
 ### Step 1 — Clone 仓库 + 装 Python 依赖
 
 ```bash
-git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.claude/skills/bookkeeping
+git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/skills/bookkeeping
 pip install google-api-python-client google-auth
 ```
 
@@ -62,7 +62,7 @@ chmod 600 ~/.config/gcp/bookkeeping-sa.json
 ### Step 5 — 写 config.json
 
 ```bash
-cd ~/.claude/skills/bookkeeping
+cd ~/.openclaw/workspace/skills/bookkeeping
 cp config.example.json config.json
 ```
 
@@ -82,7 +82,7 @@ cp config.example.json config.json
 ### Step 6 — 冒烟测试
 
 ```bash
-echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.claude/skills/bookkeeping/scripts/append_row.py
+echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.openclaw/workspace/skills/bookkeeping/scripts/append_row.py
 ```
 
 看到 `OK 'Sheet1'!A2:N2`（或中文 tab 名）并且 sheet 第 2 行出现 TEST，就全通了。完事记得把这行测试数据删掉。
@@ -91,7 +91,7 @@ echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"curr
 
 ## 使用
 
-在 Claude Code 会话里把小票图片拖进来，然后说 "log this" / "记一下" 之类即可。Skill 会根据"小票/记账"类请求自动触发，**不需要** slash command。
+在 OpenClaw 会话里把小票图片拖进来，然后说 "log this" / "记一下" 之类即可。Skill 会根据"小票/记账"类请求自动触发，**不需要** slash command。
 
 文字说明可选，可用来补充上下文（支付方式、AA、分类提示、备注等）。
 
@@ -99,7 +99,7 @@ echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"curr
 
 | 文件                   | 作用                                          |
 |------------------------|-----------------------------------------------|
-| `SKILL.md`             | 入口文件 — Claude 读它来决定如何执行 skill    |
+| `SKILL.md`             | 入口文件 — OpenClaw 读它来决定如何执行 skill |
 | `categories.md`        | 固定的 14 个分类列表                          |
 | `schema.md`            | Google Sheet 列顺序（A–N）                    |
 | `config.example.json`  | 配置模板 → 复制为 `config.json`（已 gitignore）|

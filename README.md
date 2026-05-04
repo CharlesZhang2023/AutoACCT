@@ -1,10 +1,10 @@
-# AutoACCT — Bookkeeping Skill for Claude Code
+# AutoACCT for OpenClaw
 
 **English** | [简体中文](README.zh-CN.md)
 
-A [Claude Code](https://claude.com/claude-code) skill that turns a receipt image (optionally with a caption) into a structured row in a Google Sheet, with automatic HKD conversion.
+An OpenClaw skill that turns a receipt image (optionally with a caption) into a structured row in a Google Sheet, with automatic HKD conversion.
 
-Intended to be invoked manually inside Claude Code today, and wired up to a WhatsApp webhook later.
+Intended to be invoked manually inside OpenClaw today, and wired up to a WhatsApp webhook later.
 
 ## What it does
 
@@ -21,7 +21,7 @@ Follow the 6 steps below. Takes ~10 minutes.
 ### Step 1 — Clone the skill and install Python deps
 
 ```bash
-git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.claude/skills/bookkeeping
+git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/skills/bookkeeping
 pip install google-api-python-client google-auth
 ```
 
@@ -62,7 +62,7 @@ chmod 600 ~/.config/gcp/bookkeeping-sa.json
 ### Step 5 — Write config.json
 
 ```bash
-cd ~/.claude/skills/bookkeeping
+cd ~/.openclaw/workspace/skills/bookkeeping
 cp config.example.json config.json
 ```
 
@@ -82,7 +82,7 @@ Open `config.json` in your editor and fill in **sheet_id** and **worksheet** wit
 ### Step 6 — Sanity check
 
 ```bash
-echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.claude/skills/bookkeeping/scripts/append_row.py
+echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.openclaw/workspace/skills/bookkeeping/scripts/append_row.py
 ```
 
 Success looks like: `OK 'Sheet1'!A2:N2` and a new row appears in the sheet. Delete the TEST row when you're done.
@@ -91,7 +91,7 @@ If you hit an error, see [`scripts/setup.md`](scripts/setup.md) for the longer r
 
 ## Use
 
-In a Claude Code session, drop a receipt image in and say "log this" (or similar). The skill auto-triggers on receipt-image requests — no slash command needed.
+In an OpenClaw session, drop a receipt image in and say "log this" (or similar). The skill auto-triggers on receipt-image requests — no slash command needed.
 
 Caption is optional; use it to add context (payment method, split, category hint, free-text note).
 
@@ -99,7 +99,7 @@ Caption is optional; use it to add context (payment method, split, category hint
 
 | File                  | Purpose                                           |
 |-----------------------|---------------------------------------------------|
-| `SKILL.md`            | Entry — Claude reads this to invoke the skill     |
+| `SKILL.md`            | Entry — OpenClaw reads this to invoke the skill   |
 | `categories.md`       | Fixed category list (14 categories)               |
 | `schema.md`           | Google Sheet column order (A–N)                   |
 | `config.example.json` | Template → copy to `config.json` (gitignored)     |

@@ -13,7 +13,7 @@ Default working language: **English**. All written output (row values, replies) 
 - Caption may be empty, or may add context (who paid, split %, category hint, payment method). Always incorporate caption if present.
 
 ## Prerequisites (check once per session)
-1. `~/.claude/skills/bookkeeping/config.json` exists. If only `config.example.json` is present, **stop** and tell the user to copy it and fill in `sheet_id`, `worksheet`, `service_account_path`. Point them at `scripts/setup.md`.
+1. `~/.openclaw/workspace/skills/bookkeeping/config.json` exists. If only `config.example.json` is present, **stop** and tell the user to copy it and fill in `sheet_id`, `worksheet`, `service_account_path`. Point them at `scripts/setup.md`.
 2. Python deps installed: `google-api-python-client`, `google-auth`. If `append_row.py` fails with ImportError, instruct the user to run `pip install google-api-python-client google-auth` and retry.
 
 ## Workflow
@@ -21,12 +21,12 @@ Default working language: **English**. All written output (row values, replies) 
 2. **Normalize** per the rules below.
 3. **Convert to HKD** by running:
    ```
-   python ~/.claude/skills/bookkeeping/scripts/fx_convert.py <amount> <currency> --date <yyyy-mm-dd>
+   python ~/.openclaw/workspace/skills/bookkeeping/scripts/fx_convert.py <amount> <currency> --date <yyyy-mm-dd>
    ```
    Output is `<hkd_amount>\t<fx_rate>\t<fx_date>` (tab-separated). If currency is HKD, skip the call and set `amount_hkd=amount`, `fx_rate=1`, `fx_date=<date>`.
 4. **Append the row** by piping JSON into:
    ```
-   echo '<json>' | python ~/.claude/skills/bookkeeping/scripts/append_row.py
+   echo '<json>' | python ~/.openclaw/workspace/skills/bookkeeping/scripts/append_row.py
    ```
    Keys must match `schema.md` (snake_case: `date`, `merchant`, `category`, `amount`, `currency`, `amount_hkd`, `fx_rate`, `fx_date`, `payment_method`, `line_items`, `raw_ocr`, `note`, `receipt`). Script adds `logged_at` automatically.
 5. **Report** to the user: the row you wrote and any field you had to guess.
