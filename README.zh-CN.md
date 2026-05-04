@@ -21,7 +21,7 @@
 ### Step 1 — Clone 仓库 + 装 Python 依赖
 
 ```bash
-git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/skills/bookkeeping
+git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/skills/AutoACCT
 pip install google-api-python-client google-auth
 ```
 
@@ -30,11 +30,11 @@ pip install google-api-python-client google-auth
 1. 打开 https://console.cloud.google.com/，左上角下拉 → **New Project** → 随便起名（如 `autoacct`）→ Create
 2. 顶部搜索框搜 **Google Sheets API** → 点进去 → **Enable**
 3. 左侧菜单 **IAM & Admin → Service Accounts → + Create Service Account**
-   - Name 填 `bookkeeping`（随意）
+   - Name 填 `AutoACCT`（随意）
    - 点 **Create and Continue → Done**（中间可选的 role 步骤跳过）
 4. 点进刚建好的服务账号 → 顶部 **Keys** 标签 → **Add Key → Create new key → 选 JSON → Create**
    浏览器会自动下载一个 `.json` 文件到你的 Downloads
-5. **复制服务账号的 email**（形如 `bookkeeping@<项目名>.iam.gserviceaccount.com`），Step 4 要用
+5. **复制服务账号的 email**（形如 `autoacct@<项目名>.iam.gserviceaccount.com`），Step 4 要用
 
 ### Step 3 — 把 key 文件挪出 repo
 
@@ -42,8 +42,8 @@ pip install google-api-python-client google-auth
 
 ```bash
 mkdir -p ~/.config/gcp
-mv ~/Downloads/<你下载的文件名>.json ~/.config/gcp/bookkeeping-sa.json
-chmod 600 ~/.config/gcp/bookkeeping-sa.json
+mv ~/Downloads/<你下载的文件名>.json ~/.config/gcp/autoacct-sa.json
+chmod 600 ~/.config/gcp/autoacct-sa.json
 ```
 
 ### Step 4 — 建 Google Sheet
@@ -62,7 +62,7 @@ chmod 600 ~/.config/gcp/bookkeeping-sa.json
 ### Step 5 — 写 config.json
 
 ```bash
-cd ~/.openclaw/workspace/skills/bookkeeping
+cd ~/.openclaw/workspace/skills/AutoACCT
 cp config.example.json config.json
 ```
 
@@ -72,7 +72,7 @@ cp config.example.json config.json
 {
   "sheet_id": "1abc...xyz",
   "worksheet": "Sheet1",
-  "service_account_path": "~/.config/gcp/bookkeeping-sa.json",
+  "service_account_path": "~/.config/gcp/autoacct-sa.json",
   "hkd_fx_provider": "frankfurter"
 }
 ```
@@ -82,7 +82,7 @@ cp config.example.json config.json
 ### Step 6 — 冒烟测试
 
 ```bash
-echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.openclaw/workspace/skills/bookkeeping/scripts/append_row.py
+echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.openclaw/workspace/skills/AutoACCT/scripts/append_row.py
 ```
 
 看到 `OK 'Sheet1'!A2:N2`（或中文 tab 名）并且 sheet 第 2 行出现 TEST，就全通了。完事记得把这行测试数据删掉。

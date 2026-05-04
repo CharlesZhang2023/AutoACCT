@@ -21,7 +21,7 @@ Follow the 6 steps below. Takes ~10 minutes.
 ### Step 1 — Clone the skill and install Python deps
 
 ```bash
-git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/skills/bookkeeping
+git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/skills/AutoACCT
 pip install google-api-python-client google-auth
 ```
 
@@ -30,11 +30,11 @@ pip install google-api-python-client google-auth
 1. Open https://console.cloud.google.com/ and create a new project (e.g. `autoacct`).
 2. In the top search bar, search **Google Sheets API** → click the result → **Enable**.
 3. Left menu: **IAM & Admin → Service Accounts → + Create Service Account**
-   - Name: `bookkeeping` (any name works)
+   - Name: `AutoACCT` (any name works)
    - Click **Create and Continue → Done** (skip the optional role step).
 4. Click the new service account → **Keys** tab → **Add Key → Create new key → JSON → Create**.
    A `.json` key file will download to your browser's Downloads folder.
-5. **Copy the service account's email** (looks like `bookkeeping@<project>.iam.gserviceaccount.com`) — you'll paste it in Step 4.
+5. **Copy the service account's email** (looks like `autoacct@<project>.iam.gserviceaccount.com`) — you'll paste it in Step 4.
 
 ### Step 3 — Move the key file out of the repo
 
@@ -42,8 +42,8 @@ Never leave a service-account key inside the repo directory. Move it to `~/.conf
 
 ```bash
 mkdir -p ~/.config/gcp
-mv ~/Downloads/<your-downloaded-file>.json ~/.config/gcp/bookkeeping-sa.json
-chmod 600 ~/.config/gcp/bookkeeping-sa.json
+mv ~/Downloads/<your-downloaded-file>.json ~/.config/gcp/autoacct-sa.json
+chmod 600 ~/.config/gcp/autoacct-sa.json
 ```
 
 ### Step 4 — Create the Google Sheet
@@ -62,7 +62,7 @@ chmod 600 ~/.config/gcp/bookkeeping-sa.json
 ### Step 5 — Write config.json
 
 ```bash
-cd ~/.openclaw/workspace/skills/bookkeeping
+cd ~/.openclaw/workspace/skills/AutoACCT
 cp config.example.json config.json
 ```
 
@@ -72,7 +72,7 @@ Open `config.json` in your editor and fill in **sheet_id** and **worksheet** wit
 {
   "sheet_id": "1abc...xyz",
   "worksheet": "Sheet1",
-  "service_account_path": "~/.config/gcp/bookkeeping-sa.json",
+  "service_account_path": "~/.config/gcp/autoacct-sa.json",
   "hkd_fx_provider": "frankfurter"
 }
 ```
@@ -82,7 +82,7 @@ Open `config.json` in your editor and fill in **sheet_id** and **worksheet** wit
 ### Step 6 — Sanity check
 
 ```bash
-echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.openclaw/workspace/skills/bookkeeping/scripts/append_row.py
+echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.openclaw/workspace/skills/AutoACCT/scripts/append_row.py
 ```
 
 Success looks like: `OK 'Sheet1'!A2:N2` and a new row appears in the sheet. Delete the TEST row when you're done.

@@ -10,9 +10,9 @@ pip install google-api-python-client google-auth
 2. Enable the **Google Sheets API** for the project.
 3. Create a **service account**; skip the optional IAM steps.
 4. In the service account, create a **JSON key** and download it.
-5. Move the key to a safe path, e.g. `~/.config/gcp/bookkeeping-sa.json`, then:
+5. Move the key to a safe path, e.g. `~/.config/gcp/autoacct-sa.json`, then:
    ```
-   chmod 600 ~/.config/gcp/bookkeeping-sa.json
+   chmod 600 ~/.config/gcp/autoacct-sa.json
    ```
 
 ## 3. Prepare the Google Sheet
@@ -26,7 +26,7 @@ pip install google-api-python-client google-auth
 
 ## 4. Skill config
 ```
-cd ~/.openclaw/workspace/skills/bookkeeping
+cd ~/.openclaw/workspace/skills/AutoACCT
 cp config.example.json config.json
 # edit config.json: sheet_id, service_account_path
 ```
@@ -34,6 +34,6 @@ cp config.example.json config.json
 ## 5. Sanity check
 ```
 echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' \
-  | python ~/.openclaw/workspace/skills/bookkeeping/scripts/append_row.py
+  | python ~/.openclaw/workspace/skills/AutoACCT/scripts/append_row.py
 ```
 You should see `OK Expenses!A2:N2` (or similar) and a new row in the sheet. Delete the TEST row when done.
