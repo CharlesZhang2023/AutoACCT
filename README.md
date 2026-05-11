@@ -25,7 +25,7 @@ Follow the 4 steps below. Takes ~5 minutes.
 ### Step 1 — Clone the skill and install Python deps
 
 ```bash
-git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/skills/AutoACCT
+git clone https://github.com/CharlesZhang2023/AutoACCT.git ~/.openclaw/workspace/skills/AutoACCT
 pip install google-api-python-client google-auth
 ```
 

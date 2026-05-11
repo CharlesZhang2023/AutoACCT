@@ -61,7 +61,7 @@ That's the Terminal. Leave it open.
 Copy the entire line below, click into the Terminal, paste, and press **Enter**:
 
 ```bash
-git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/skills/AutoACCT
+git clone https://github.com/CharlesZhang2023/AutoACCT.git ~/.openclaw/workspace/skills/AutoACCT
 ```
 
 **What you should see:** a few lines like `Cloning into '/Users/.../AutoACCT'...` followed by your prompt returning.
