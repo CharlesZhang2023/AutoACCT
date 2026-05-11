@@ -40,6 +40,23 @@ COLUMNS = [
     "line_items", "raw_ocr", "note", "receipt", "logged_at",
 ]
 
+# Columns stored as numbers in Sheets. Everything else stays as a string —
+# including `date` / `fx_date`, which USER_ENTERED would otherwise auto-parse
+# into a Sheets serial-date integer (e.g. 46153) that displays as a raw number
+# when the column has no date format applied.
+NUMERIC_COLS = {"amount", "amount_hkd", "fx_rate"}
+
+
+def coerce(col: str, val):
+    if val == "" or val is None:
+        return ""
+    if col in NUMERIC_COLS:
+        try:
+            return float(val)
+        except (TypeError, ValueError):
+            return str(val)
+    return str(val)
+
 
 def load_config() -> dict:
     if not CONFIG_PATH.exists():
@@ -60,7 +77,7 @@ def main() -> int:
         datetime.now(timezone.utc).isoformat(timespec="seconds"),
     )
 
-    values = [str(row.get(col, "")) for col in COLUMNS]
+    values = [coerce(col, row.get(col, "")) for col in COLUMNS]
 
     creds = Credentials.from_service_account_file(
         cfg["service_account_path"],
@@ -73,7 +90,10 @@ def main() -> int:
         .append(
             spreadsheetId=normalize_sheet_id(cfg["sheet_id"]),
             range=f"{cfg['worksheet']}!A1",
-            valueInputOption="USER_ENTERED",
+            # RAW (not USER_ENTERED) so Sheets stores values as their JSON
+            # types: strings stay strings (no date auto-parsing), floats stay
+            # numbers. `coerce()` above puts the right type into each column.
+            valueInputOption="RAW",
             insertDataOption="INSERT_ROWS",
             body={"values": [values]},
         )

@@ -106,6 +106,16 @@ Wrong passphrase. Most common causes:
 - They pasted the wrong entry from the password manager.
 - The passphrase has been rotated since last time. Have them check the password manager for the latest version.
 
+### Dates appear as integers (e.g. `46153`) in the Date / FX Date / Logged At columns
+These are Google Sheets date serial numbers — written by an older version of `append_row.py` that used `valueInputOption=USER_ENTERED`. Current code uses `RAW` + typed coercion, so new rows are correct.
+
+To fix existing bad rows: select the affected cells → **Format → Number → Plain text**, then re-enter or re-import the date strings. Or simply delete and re-log those receipts.
+
+To prevent this for new sheets: nothing — `RAW` mode handles it automatically. (Optional belt-and-braces: format column A as Plain Text before the first write.)
+
+### Where is the FX cache?
+`~/.cache/autoacct/fx_cache.json`. Built up by `fx_convert.py` automatically. Keyed by `<currency>_<date>` → frankfurter.app's rate + canonical date. ECB historical rates are immutable, so the cache is safe to keep forever. Delete the file to force a fresh fetch.
+
 ### `ImportError: No module named 'googleapiclient'`
 Python deps not installed. Run `pip install google-api-python-client google-auth`. If `pip` is missing, try `pip3` or `python3 -m pip install ...`.
 
