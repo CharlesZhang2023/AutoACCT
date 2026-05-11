@@ -21,6 +21,8 @@ The repo bundles the team's Google service-account key, encrypted with AES-256. 
 Follow the 4 steps below. Takes ~5 minutes.
 
 > **Not comfortable with the terminal?** Use [`DEPLOY.md`](DEPLOY.md) instead — same install, but written for non-technical users with an AI agent walking them through.
+>
+> **Don't want to share a service account with the rest of the team?** See [`BYO-KEY.md`](BYO-KEY.md) for how to bring your own — more private, but ~15 minutes of extra GCP setup.
 
 ### Step 1 — Clone the skill and install Python deps
 
@@ -112,6 +114,7 @@ Caption is optional; use it to add context (payment method, split, category hint
 | `secrets/bookkeeping-sa.json.enc` | Team SA key, AES-256 encrypted (safe to commit)   |
 | `secrets/README.md`             | How the encryption works + rotation procedures        |
 | `DEPLOY.md`                     | Step-by-step install guide for non-technical users   |
+| `BYO-KEY.md`                    | Optional: create your own SA instead of using the shared one |
 
 ## License
 

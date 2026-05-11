@@ -21,6 +21,8 @@
 按下面 4 步操作，约 5 分钟。
 
 > **不太熟悉命令行？** 用 [`DEPLOY.md`](DEPLOY.md)（英文）—— 同样的安装流程，但是为非技术用户写的逐步指南，可配合 AI agent 一步步操作。
+>
+> **不想跟团队共用同一个 service account？** 见 [`BYO-KEY.md`](BYO-KEY.md)（英文）—— 自己建一个，更私有，但多花 ~15 分钟做 GCP 设置。
 
 ### Step 1 — Clone 仓库 + 装 Python 依赖
 
@@ -112,6 +114,7 @@ echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"curr
 | `secrets/bookkeeping-sa.json.enc` | 团队 SA key，AES-256 加密（可安全 commit）        |
 | `secrets/README.md`               | 加密机制说明 + 轮换流程                            |
 | `DEPLOY.md`                       | 面向非技术用户的逐步安装指南（英文）              |
+| `BYO-KEY.md`                      | 可选：自建 SA 代替共享 key 的指南（英文）          |
 
 ## License
 
