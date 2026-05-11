@@ -13,7 +13,7 @@ Default working language: **English**. All written output (row values, replies) 
 - Caption may be empty, or may add context (who paid, split %, category hint, payment method). Always incorporate caption if present.
 
 ## Prerequisites (check once per session)
-1. `~/.openclaw/workspace/skills/AutoACCT/config.json` exists. If only `config.example.json` is present, **stop** and tell the user to copy it and fill in `sheet_id`, `worksheet`, `service_account_path`. Point them at `scripts/setup.md`.
+1. `~/.openclaw/workspace/skills/AutoACCT/config.json` exists. If only `config.example.json` is present, **stop** and tell the user to copy it and fill in `sheet_id`, `worksheet`, `service_account_path`. Point them at the README install section.
 2. Python deps installed: `google-api-python-client`, `google-auth`. If `append_row.py` fails with ImportError, instruct the user to run `pip install google-api-python-client google-auth` and retry.
 
 ## Workflow

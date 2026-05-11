@@ -1,6 +1,6 @@
 {
-  "sheet_id": "PUT_GOOGLE_SHEET_ID_HERE",
-  "worksheet": "Expenses",
+  "sheet_id": "PASTE_YOUR_GOOGLE_SHEET_URL_OR_ID_HERE",
+  "worksheet": "Sheet1",
   "service_account_path": "~/.config/gcp/autoacct-sa.json",
   "hkd_fx_provider": "frankfurter"
 }

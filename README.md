@@ -14,9 +14,13 @@ Intended to be invoked manually inside OpenClaw today, and wired up to a WhatsAp
 4. Appends one row to a configured Google Sheet (14 columns — see `schema.md`).
 5. Replies with the row and flags any field it had to guess.
 
-## Install
+## Install (end users)
 
-Follow the 6 steps below. Takes ~10 minutes.
+Your admin will have given you **two things**: a service-account JSON key file (e.g. `autoacct-sa.json`) and a service-account email (e.g. `autoacct@your-project.iam.gserviceaccount.com`). If you don't have them, ask your admin first.
+
+Follow the 4 steps below. Takes ~5 minutes.
+
+> **Not comfortable with the terminal?** Use [`DEPLOY.md`](DEPLOY.md) instead — same install, but written for non-technical users with an AI agent walking them through.
 
 ### Step 1 — Clone the skill and install Python deps
 
@@ -25,69 +29,67 @@ git clone https://git.deepknow.site/Knowit/AutoACCT.git ~/.openclaw/workspace/sk
 pip install google-api-python-client google-auth
 ```
 
-### Step 2 — Create a Google Cloud service account
-
-1. Open https://console.cloud.google.com/ and create a new project (e.g. `autoacct`).
-2. In the top search bar, search **Google Sheets API** → click the result → **Enable**.
-3. Left menu: **IAM & Admin → Service Accounts → + Create Service Account**
-   - Name: `AutoACCT` (any name works)
-   - Click **Create and Continue → Done** (skip the optional role step).
-4. Click the new service account → **Keys** tab → **Add Key → Create new key → JSON → Create**.
-   A `.json` key file will download to your browser's Downloads folder.
-5. **Copy the service account's email** (looks like `autoacct@<project>.iam.gserviceaccount.com`) — you'll paste it in Step 4.
-
-### Step 3 — Move the key file out of the repo
-
-Never leave a service-account key inside the repo directory. Move it to `~/.config/gcp/`:
+### Step 2 — Drop the admin's JSON key into `~/.config/gcp/`
 
 ```bash
 mkdir -p ~/.config/gcp
-mv ~/Downloads/<your-downloaded-file>.json ~/.config/gcp/autoacct-sa.json
+mv ~/Downloads/autoacct-sa.json ~/.config/gcp/autoacct-sa.json
 chmod 600 ~/.config/gcp/autoacct-sa.json
 ```
 
-### Step 4 — Create the Google Sheet
+(Replace `~/Downloads/autoacct-sa.json` with wherever you saved the file your admin sent.)
+
+### Step 3 — Create your Google Sheet and share it with the service account
 
 1. Open https://sheets.new (creates a fresh blank sheet).
-2. Give it a title (e.g. `AutoACCT Expenses`).
-3. **Note the tab name** at the bottom-left — default is `Sheet1` (English UI) or `工作表1` (Chinese UI). Write it down, you'll need the exact string in Step 5.
+2. Title it (e.g. `My AutoACCT Expenses`).
+3. **Note the tab name** at the bottom-left — `Sheet1` (English UI) or `工作表1` (Chinese UI). You'll paste it into `config.json` in Step 4.
 4. Click cell **A1**, then paste this one line (the tabs split the headers across A–N automatically):
    ```
    Date	Merchant	Category	Amount	Currency	Amount (HKD)	FX Rate	FX Date	Payment Method	Line Items	Raw OCR	Note	Receipt	Logged At
    ```
-5. Click **Share** (top right) → paste the service-account email from Step 2 → role **Editor** → **Send** (you can uncheck "Notify people").
-6. Copy the **Sheet ID** from the URL — it's the long string between `/d/` and `/edit`:
-   `https://docs.google.com/spreadsheets/d/`**`1abc...xyz`**`/edit`
+5. Click **Share** (top right) → paste the **service-account email** your admin gave you → role **Editor** → **Send** (you can uncheck "Notify people").
+6. **Copy the full URL from your browser's address bar.** Something like:
+   `https://docs.google.com/spreadsheets/d/1abc...xyz/edit#gid=0`
+   (The script extracts the sheet ID for you — either the full URL or just the bare ID works.)
 
-### Step 5 — Write config.json
+### Step 4 — Write config.json
 
 ```bash
 cd ~/.openclaw/workspace/skills/AutoACCT
 cp config.example.json config.json
 ```
 
-Open `config.json` in your editor and fill in **sheet_id** and **worksheet** with the values from Step 4:
+Open `config.json` and fill in **sheet_id** (paste the URL from Step 3.6) and **worksheet** (the tab name from Step 3.3):
 
 ```json
 {
-  "sheet_id": "1abc...xyz",
+  "sheet_id": "https://docs.google.com/spreadsheets/d/1abc...xyz/edit",
   "worksheet": "Sheet1",
   "service_account_path": "~/.config/gcp/autoacct-sa.json",
   "hkd_fx_provider": "frankfurter"
 }
 ```
 
-> ⚠️ **Common pitfall**: if your Google Sheets UI is in Chinese, the default tab is named `工作表1` (not `Sheet1`). Put `"worksheet": "工作表1"` exactly. A mismatched tab name throws `HTTP 400: Unable to parse range`.
+> **Common pitfall**: if your Google Sheets UI is in Chinese, the default tab is named `工作表1` (not `Sheet1`). Put `"worksheet": "工作表1"` exactly. A mismatched tab name throws `HTTP 400: Unable to parse range`.
 
-### Step 6 — Sanity check
+### Sanity check
 
 ```bash
 echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"currency":"HKD","amount_hkd":1,"fx_rate":1,"fx_date":"2026-04-20"}' | python3 ~/.openclaw/workspace/skills/AutoACCT/scripts/append_row.py
 ```
 
-Success looks like: `OK 'Sheet1'!A2:N2` and a new row appears in the sheet. Delete the TEST row when you're done.
+Success looks like: `OK 'Sheet1'!A2:N2` and a new row appears in your sheet. Delete the TEST row when you're done.
 
-If you hit an error, see [`scripts/setup.md`](scripts/setup.md) for the longer reference.
+If you hit an error, see [`scripts/setup.md`](scripts/setup.md) for troubleshooting.
+
+## Admin setup (one time, done by you before distributing)
+
+Before users can run the steps above, **you** (the admin) create one shared service account and distribute the JSON to users. See [`scripts/setup.md`](scripts/setup.md) for the full admin guide — short version:
+
+1. Create a GCP project, enable Sheets API, create a service account, download the JSON key.
+2. Distribute the JSON file + the service-account email to your users via a secure channel (1Password / Bitwarden / encrypted email — **never commit to git**).
+3. Tell users to follow the 4 steps above.
 
 ## Use
 
@@ -97,22 +99,17 @@ Caption is optional; use it to add context (payment method, split, category hint
 
 ## Files
 
-| File                  | Purpose                                           |
-|-----------------------|---------------------------------------------------|
-| `SKILL.md`            | Entry — OpenClaw reads this to invoke the skill   |
-| `categories.md`       | Fixed category list (14 categories)               |
-| `schema.md`           | Google Sheet column order (A–N)                   |
-| `config.example.json` | Template → copy to `config.json` (gitignored)     |
-| `scripts/fx_convert.py` | Currency → HKD via frankfurter.app              |
-| `scripts/append_row.py` | Writes one row to Google Sheets                 |
-| `scripts/setup.md`    | One-time setup steps                              |
-
-## Roadmap
-
-- [ ] WhatsApp webhook layer (Meta Cloud API or Twilio) so images can be sent from a phone.
-- [ ] Optional Google Drive upload so the `Receipt` column becomes a clickable image link.
-- [ ] Monthly summary script (totals by category, currency breakdown).
+| File                      | Purpose                                              |
+|---------------------------|------------------------------------------------------|
+| `SKILL.md`                | Entry — OpenClaw reads this to invoke the skill      |
+| `categories.md`           | Fixed category list (14 categories)                  |
+| `schema.md`               | Google Sheet column order (A–N)                      |
+| `config.example.json`     | Template → copy to `config.json` (gitignored)        |
+| `scripts/fx_convert.py`   | Currency → HKD via frankfurter.app                   |
+| `scripts/append_row.py`   | Writes one row to Google Sheets                      |
+| `scripts/setup.md`        | Admin setup guide + troubleshooting                  |
+| `DEPLOY.md`               | Step-by-step install guide for non-technical users   |
 
 ## License
 
-Private — internal use.
+[MIT](LICENSE) © 2026 Knowit

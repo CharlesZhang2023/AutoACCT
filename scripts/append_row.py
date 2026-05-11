@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,6 +26,13 @@ from googleapiclient.discovery import build
 
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.json"
+
+
+def normalize_sheet_id(value: str) -> str:
+    # Accept either a bare sheet ID or a full Google Sheets URL —
+    # e.g. https://docs.google.com/spreadsheets/d/<ID>/edit#gid=0.
+    m = re.search(r"/d/([a-zA-Z0-9_-]+)", value.strip())
+    return m.group(1) if m else value.strip()
 
 COLUMNS = [
     "date", "merchant", "category", "amount", "currency",
@@ -63,7 +71,7 @@ def main() -> int:
         svc.spreadsheets()
         .values()
         .append(
-            spreadsheetId=cfg["sheet_id"],
+            spreadsheetId=normalize_sheet_id(cfg["sheet_id"]),
             range=f"{cfg['worksheet']}!A1",
             valueInputOption="USER_ENTERED",
             insertDataOption="INSERT_ROWS",
