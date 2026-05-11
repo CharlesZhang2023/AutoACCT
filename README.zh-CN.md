@@ -16,7 +16,7 @@
 
 ## 安装（用户端）
 
-管理员（admin）会给你**两样东西**：一个 service-account JSON 密钥文件（如 `autoacct-sa.json`），以及一个 service-account 邮箱（形如 `autoacct@your-project.iam.gserviceaccount.com`）。没拿到先找管理员要。
+仓库里**自带了团队的 Google service-account 密钥**，已用 AES-256 加密。管理员只需给你**一样东西**：解密 passphrase（一般在团队密码管理器里）。
 
 按下面 4 步操作，约 5 分钟。
 
@@ -26,18 +26,17 @@
 
 ```bash
 git clone https://github.com/CharlesZhang2023/AutoACCT.git ~/.openclaw/workspace/skills/AutoACCT
+cd ~/.openclaw/workspace/skills/AutoACCT
 pip install google-api-python-client google-auth
 ```
 
-### Step 2 — 把管理员发的 JSON 放到 `~/.config/gcp/`
+### Step 2 — 解密内置的 service-account 密钥
 
 ```bash
-mkdir -p ~/.config/gcp
-mv ~/Downloads/autoacct-sa.json ~/.config/gcp/autoacct-sa.json
-chmod 600 ~/.config/gcp/autoacct-sa.json
+bash scripts/decrypt-key.sh
 ```
 
-（`~/Downloads/autoacct-sa.json` 改成你实际保存文件的路径。）
+会提示你输入 passphrase。成功后脚本会把解出的 JSON 写到 `~/.config/gcp/bookkeeping-sa.json`（权限 600），并打印 **service-account 邮箱** —— 复制下来，Step 3 要用。
 
 ### Step 3 — 建你自己的 Google Sheet 并把它 share 给 service account
 
@@ -48,7 +47,7 @@ chmod 600 ~/.config/gcp/autoacct-sa.json
    ```
    Date	Merchant	Category	Amount	Currency	Amount (HKD)	FX Rate	FX Date	Payment Method	Line Items	Raw OCR	Note	Receipt	Logged At
    ```
-5. 右上角 **Share** → 粘贴管理员给你的 **service-account 邮箱** → 权限选 **Editor** → **Send**（"Notify people" 可以不勾）
+5. 右上角 **Share** → 粘贴 Step 2 `decrypt-key.sh` 打印出来的 **service-account 邮箱** → 权限选 **Editor** → **Send**（"Notify people" 可以不勾）
 6. **从浏览器地址栏直接复制 sheet 的完整 URL**，类似：
    `https://docs.google.com/spreadsheets/d/1abc...xyz/edit#gid=0`
    （脚本会自动从 URL 里抽出 sheet ID，所以完整链接或裸 ID 都行。）
@@ -66,7 +65,7 @@ cp config.example.json config.json
 {
   "sheet_id": "https://docs.google.com/spreadsheets/d/1abc...xyz/edit",
   "worksheet": "Sheet1",
-  "service_account_path": "~/.config/gcp/autoacct-sa.json",
+  "service_account_path": "~/.config/gcp/bookkeeping-sa.json",
   "hkd_fx_provider": "frankfurter"
 }
 ```
@@ -83,13 +82,14 @@ echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"curr
 
 遇到报错可以参考 [`scripts/setup.md`](scripts/setup.md) 的故障排查。
 
-## 管理员一次性配置（你做一遍，再把 JSON 发给用户）
+## 管理员一次性配置
 
-用户能跑上面 4 步之前，**你（管理员）**先建好一个共享的 service account，把 JSON 发给用户。完整管理员指南见 [`scripts/setup.md`](scripts/setup.md)，简版流程：
+完整管理员指南见 [`scripts/setup.md`](scripts/setup.md)，加密机制说明见 [`secrets/README.md`](secrets/README.md)。简版：
 
 1. 建 GCP 项目 → 启用 Sheets API → 建 service account → 下载 JSON key
-2. 通过安全渠道把 JSON 文件 + service-account 邮箱发给每个用户（1Password / Bitwarden / 加密邮件 ——**绝不能 commit 到 git**）
-3. 让用户按上面 4 步装
+2. 用强随机 passphrase 加密 JSON，把 `secrets/bookkeeping-sa.json.enc` commit 进仓库（openssl 一行命令见 `secrets/README.md`）
+3. 把 passphrase 存到团队密码管理器，告诉用户按上面 4 步装
+4. 成员离职时轮换 passphrase；passphrase 或解密后的 JSON 有泄露风险时，轮换底层 GCP key
 
 ## 使用
 
@@ -105,10 +105,13 @@ echo '{"date":"2026-04-20","merchant":"TEST","category":"Other","amount":1,"curr
 | `categories.md`           | 固定的 14 个分类列表                              |
 | `schema.md`               | Google Sheet 列顺序（A–N）                        |
 | `config.example.json`     | 配置模板 → 复制为 `config.json`（已 gitignore）    |
-| `scripts/fx_convert.py`   | 原币种 → HKD 换算（frankfurter.app）              |
-| `scripts/append_row.py`   | 向 Google Sheet 写入一行                          |
-| `scripts/setup.md`        | 管理员配置指南 + 故障排查                          |
-| `DEPLOY.md`               | 面向非技术用户的逐步安装指南（英文）              |
+| `scripts/fx_convert.py`           | 原币种 → HKD 换算（frankfurter.app）              |
+| `scripts/append_row.py`           | 向 Google Sheet 写入一行                          |
+| `scripts/decrypt-key.sh`          | 解密内置 SA key 到 `~/.config/gcp/`              |
+| `scripts/setup.md`                | 管理员配置指南 + 故障排查                          |
+| `secrets/bookkeeping-sa.json.enc` | 团队 SA key，AES-256 加密（可安全 commit）        |
+| `secrets/README.md`               | 加密机制说明 + 轮换流程                            |
+| `DEPLOY.md`                       | 面向非技术用户的逐步安装指南（英文）              |
 
 ## License
 

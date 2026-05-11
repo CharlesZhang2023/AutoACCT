@@ -23,39 +23,65 @@ The shared-key model: you create **one** Google Cloud service account and distri
 5. **Copy the service account's email** (e.g. `autoacct@<project>.iam.gserviceaccount.com`).
 6. Rename the downloaded file to `autoacct-sa.json` (recommended — DEPLOY.md assumes this name).
 
-### A.2 — Distribute the key + email to users
+### A.2 — Encrypt the JSON and commit it to the repo
 
-The JSON is a private key. Use a secure channel:
+Generate a strong random passphrase (48 chars; alphanumeric + `-_`):
 
-| Channel | Verdict |
-|---|---|
-| **Password manager shared vault** (1Password, Bitwarden, Vaultwarden) | **Recommended.** Easy to revoke, no copies floating in inboxes. |
-| Encrypted email / Signal / private DM | OK for small teams. |
-| Cloud drive with strict per-user ACLs | OK if your org already uses one. |
-| **Plain email** | Do not. |
-| **Git repo (even private)** | Do not — `.gitignore` already excludes `*-sa.json`. |
+```bash
+python3 -c "import secrets, string; print(''.join(secrets.choice(string.ascii_letters + string.digits + '_-') for _ in range(48)))"
+```
+
+Encrypt with openssl (AES-256-CBC + PBKDF2, 100k iterations):
+
+```bash
+PASSPHRASE='<paste-passphrase-here>' openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
+  -pass env:PASSPHRASE \
+  -in ~/Downloads/<downloaded-key>.json \
+  -out secrets/bookkeeping-sa.json.enc
+
+git add secrets/bookkeeping-sa.json.enc
+git commit -m "secrets: add encrypted SA key"
+git push
+```
+
+Then **store the passphrase in your team password manager** (1Password / Bitwarden shared vault). The passphrase is the only out-of-band thing your users need.
+
+Move the plaintext key out of the repo dir and protect it on your own machine:
+
+```bash
+mv ~/Downloads/<downloaded-key>.json ~/.config/gcp/bookkeeping-sa.json
+chmod 600 ~/.config/gcp/bookkeeping-sa.json
+```
 
 Tell each user:
-- The JSON file (attach / share)
-- The service-account email (so they know who to share their sheet with)
-- Pointer to [`DEPLOY.md`](../DEPLOY.md) if they want hand-holding, or [`README.md`](../README.md) if they're comfortable with the terminal
+- A pointer to the repo (`git clone https://github.com/CharlesZhang2023/AutoACCT.git`)
+- The passphrase (via 1Password share — **never via plain email / chat**)
+- Link to [`DEPLOY.md`](../DEPLOY.md) for hand-holding or [`README.md`](../README.md) if they're comfortable in the terminal
 
 ### A.3 — Verify your own install first
 
-Before sending the JSON to anyone, run through the user-side install yourself (Steps 1–11 of `DEPLOY.md`) to confirm everything works end-to-end. It's also a chance to catch any GCP-side misconfiguration before users hit it.
+Before announcing it to anyone, run through the user-side install yourself (`DEPLOY.md` Parts 1–4) on a clean directory to confirm `git clone` + `decrypt-key.sh` + sheet creation + smoke test all work end-to-end. Catches any GCP-side misconfiguration before users hit it.
 
-### A.4 — Key rotation (when you need to)
+### A.4 — Rotation
 
-Rotate the JSON key when:
-- A user leaves the team (so you stop trusting their copy of the key)
-- You suspect a leak
-- Every 6–12 months as routine hygiene
+**Passphrase rotation** (when a user leaves, or every 6–12 months):
+1. Generate a new passphrase as in A.2.
+2. Decrypt with the old passphrase, re-encrypt with the new one:
+   ```bash
+   openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -d \
+     -in secrets/bookkeeping-sa.json.enc -out /tmp/sa.json
+   PASSPHRASE='<new>' openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt \
+     -pass env:PASSPHRASE -in /tmp/sa.json -out secrets/bookkeeping-sa.json.enc
+   shred -u /tmp/sa.json   # rm -P on macOS
+   ```
+3. Commit + push the new `.enc`. Update the passphrase entry in the team password manager. Users `git pull` + re-run `decrypt-key.sh`.
 
-To rotate:
-1. In GCP Console → Service Accounts → keys → **Add Key** (creates a new one) → download.
-2. **Delete the old key** in the same panel. (After deletion, any existing copies stop working.)
-3. Re-distribute the new JSON to all current users via your secure channel.
-4. Users replace their `~/.config/gcp/autoacct-sa.json` with the new file. No other changes needed — `config.json`, sheet sharing, etc. all stay intact.
+**Underlying GCP key rotation** (when the passphrase leaks, or a user with a decrypted copy leaves):
+- Passphrase rotation alone is **not enough** if someone already has the decrypted JSON on their machine — they retain a working credential.
+- GCP Console → Service Accounts → Keys → **Add Key** (download new) → **Delete old**. The deleted key stops working immediately, globally.
+- Re-encrypt the new JSON (A.2 flow), commit, push. Users pull + decrypt.
+
+See [`secrets/README.md`](../secrets/README.md) for the same procedures with copy-pasteable commands.
 
 ---
 
@@ -70,12 +96,15 @@ The `worksheet` value in `config.json` doesn't match the actual tab name. Most c
 ### `HTTP 404` / `Requested entity was not found`
 `sheet_id` in `config.json` is wrong. Tell user to re-copy the long string from `/d/.../edit` in their browser's URL bar.
 
-### `FileNotFoundError ... autoacct-sa.json`
-The JSON file isn't where `config.json` expects. Common causes:
-- User saved with a different filename (e.g. `autoacct-project-12345.json`) and never renamed it.
-- User skipped the `mv` step and the file is still in Downloads.
+### `FileNotFoundError ... bookkeeping-sa.json`
+User skipped `bash scripts/decrypt-key.sh`, or decryption failed and they didn't notice. Have them re-run it and confirm the success line `Decrypted to ~/.config/gcp/bookkeeping-sa.json`.
 
 Run `ls -la ~/.config/gcp/` to check.
+
+### `bad decrypt` from openssl
+Wrong passphrase. Most common causes:
+- They pasted the wrong entry from the password manager.
+- The passphrase has been rotated since last time. Have them check the password manager for the latest version.
 
 ### `ImportError: No module named 'googleapiclient'`
 Python deps not installed. Run `pip install google-api-python-client google-auth`. If `pip` is missing, try `pip3` or `python3 -m pip install ...`.

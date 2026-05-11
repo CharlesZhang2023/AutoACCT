@@ -16,15 +16,14 @@ You will keep your own Google Sheet (only you can read it). A small "service acc
 
 ## Before you start: a 30-second checklist
 
-Make sure you have all five of these. If any is missing, stop and get it before continuing.
+Make sure you have all four of these. If any is missing, stop and get it before continuing.
 
 | You need | How to check |
 |---|---|
 | **A Google account** | You can sign in to gmail.com |
 | **A Mac or Linux computer** | This guide uses Mac. Linux is identical. **Windows users**: use WSL (Windows Subsystem for Linux), or ask your AI agent for the Windows-equivalent commands |
 | **OpenClaw (or another AI client) installed** | You already use it to chat with an AI |
-| **A JSON file your admin sent you** | A file usually named `autoacct-sa.json` — typically delivered through a password manager, encrypted email, or Slack DM. **If you don't have this, message your admin first.** |
-| **A service-account email your admin gave you** | Looks like `autoacct@something.iam.gserviceaccount.com`. Your admin sent this together with the JSON. |
+| **A passphrase from your admin** | A ~48-character random string, typically delivered through a password manager (1Password / Bitwarden). **If you don't have it, message your admin first.** |
 | **About 5 minutes** | Don't start during a phone call. |
 
 ---
@@ -82,48 +81,57 @@ pip install google-api-python-client google-auth
 
 ---
 
-# Part 2 — Put your admin's key file in the right place (1 minute)
+# Part 2 — Unlock the bundled service-account key (1 minute)
 
-## Step 3. Find the JSON file your admin sent you
+The repo ships with the team's service-account key already encrypted (AES-256). You don't need any extra file — you just need the passphrase from your admin to unlock it.
 
-Locate the file (e.g. `autoacct-sa.json`). It is typically in:
-- Your **Downloads** folder (if downloaded from email or a link)
-- A folder you exported from a password manager (1Password / Bitwarden)
-- An attachment on your desktop
+## Step 3. Have the passphrase ready
 
-**Treat this file like a password.** Anyone who has it can write to any Google Sheet you've shared with your admin's service account. Don't email it to yourself, don't post it anywhere, don't put it on a USB stick.
+The passphrase is a ~48-character random string. It looks something like:
 
-## Step 4. Move the JSON file to its permanent home
-
-Paste this into the Terminal (assuming the file is in your Downloads folder and named `autoacct-sa.json`):
-
-```bash
-mkdir -p ~/.config/gcp
-mv ~/Downloads/autoacct-sa.json ~/.config/gcp/autoacct-sa.json
-chmod 600 ~/.config/gcp/autoacct-sa.json
+```
+d03wb3gAnXyo2N8e6FYGIUTNUd3-rFu-UxuEYbVWgOOZxZnG
 ```
 
-**What you should see:** nothing visible. The Terminal returns silently — that means it worked.
+Your admin will have stored it in the team password manager (1Password / Bitwarden). Open that, find the entry called something like "AutoACCT decrypt passphrase", and **copy it now**. You'll paste it in the next step.
 
-**If you see "No such file or directory":** the file isn't in `~/Downloads`. Find where it actually is, and adjust the `mv` command. For example, if it's on your Desktop:
+If you can't find it, message your admin before continuing.
 
-```bash
-mv ~/Desktop/autoacct-sa.json ~/.config/gcp/autoacct-sa.json
-```
+## Step 4. Run the decrypt script
 
-**If the file has a different name** (e.g. `autoacct-project-12345.json`): use that name in the `mv` command, but **rename it to `autoacct-sa.json` while moving**:
+Paste this into the Terminal:
 
 ```bash
-mv ~/Downloads/autoacct-project-12345.json ~/.config/gcp/autoacct-sa.json
+bash ~/.openclaw/workspace/skills/AutoACCT/scripts/decrypt-key.sh
 ```
 
-**Verify:** paste this into the Terminal:
+The Terminal prompts:
+
+```
+enter AES-256-CBC decryption password:
+```
+
+**Paste the passphrase from Step 3.** (Right-click → Paste, or Cmd+V. The characters won't appear on screen — that's normal; it's hiding your password.) Press **Enter**.
+
+**What success looks like:**
+```
+Decrypted to /Users/you/.config/gcp/bookkeeping-sa.json
+
+Service-account email: bookkeeping@autoacct.iam.gserviceaccount.com
+Next step: share your Google Sheet with this email (Editor).
+```
+
+**Write down the service-account email** — you'll paste it in Step 8.
+
+**If you see `bad decrypt`:** the passphrase is wrong. Either you mistyped it, or your admin sent a different one. Try again with a fresh paste.
+
+**Verify:**
 
 ```bash
 ls -la ~/.config/gcp/
 ```
 
-You should see one line containing `autoacct-sa.json` with permissions `-rw-------`.
+You should see one line containing `bookkeeping-sa.json` with permissions `-rw-------`.
 
 ---
 
@@ -156,14 +164,14 @@ You'll paste this exact name into `config.json` in Step 10. **Tab name and confi
 
 **Verify:** Column A says `Date`, Column N (scroll right if needed) says `Logged At`.
 
-## Step 8. Share the sheet with your admin's service account
+## Step 8. Share the sheet with the service account
 
 This is the step that lets the skill write into your sheet.
 
 1. Click the green **Share** button (top right of the sheet).
-2. In the "Add people, groups, and calendar events" box, **paste the service-account email your admin gave you**. It looks something like:
+2. In the "Add people, groups, and calendar events" box, **paste the service-account email that `decrypt-key.sh` printed back in Step 4**. It looks like:
    ```
-   autoacct@your-project-12345.iam.gserviceaccount.com
+   bookkeeping@autoacct.iam.gserviceaccount.com
    ```
 3. Make sure the role on the right says **Editor** (not Viewer / Commenter).
 4. **Uncheck "Notify people"** — there's no real person on the other end of that email.
@@ -212,7 +220,7 @@ Nothing visible happens — that's expected. The Terminal just made a copy of th
    {
      "sheet_id": "PASTE_YOUR_GOOGLE_SHEET_URL_OR_ID_HERE",
      "worksheet": "Sheet1",
-     "service_account_path": "~/.config/gcp/autoacct-sa.json",
+     "service_account_path": "~/.config/gcp/bookkeeping-sa.json",
      "hkd_fx_provider": "frankfurter"
    }
    ```
@@ -229,7 +237,7 @@ Nothing visible happens — that's expected. The Terminal just made a copy of th
    {
      "sheet_id": "https://docs.google.com/spreadsheets/d/1abcDEF...xyz123/edit#gid=0",
      "worksheet": "Sheet1",
-     "service_account_path": "~/.config/gcp/autoacct-sa.json",
+     "service_account_path": "~/.config/gcp/bookkeeping-sa.json",
      "hkd_fx_provider": "frankfurter"
    }
    ```
@@ -266,10 +274,10 @@ Switch to your Google Sheet — there's a new row with `TEST` as the merchant. *
 
 | You see | What it means | How to fix |
 |---|---|---|
-| `HTTP 403` or `The caller does not have permission` | You forgot Step 8 (sharing the sheet with the service-account email), or the email was typed incorrectly | Re-share the sheet with the exact email your admin gave you, role Editor. |
+| `HTTP 403` or `The caller does not have permission` | You forgot Step 8 (sharing the sheet with the service-account email), or the email was typed incorrectly | Re-run `bash scripts/decrypt-key.sh` to print the email again, then re-share the sheet with that exact address, role Editor. |
 | `HTTP 400: Unable to parse range` | The `worksheet` in `config.json` doesn't match the actual tab name | Open `config.json`, fix it to exactly match the tab name at the bottom-left of your sheet (`Sheet1` or `工作表1`). |
 | `HTTP 404` or `Requested entity was not found` | The `sheet_id` in `config.json` is wrong | Open your sheet in the browser, copy the **full URL** from the address bar, paste it into `sheet_id` (replacing whatever's there). |
-| `FileNotFoundError ... autoacct-sa.json` | The JSON file isn't where `config.json` says it is | Run `ls -la ~/.config/gcp/` — confirm the file is there with the exact name `autoacct-sa.json`. If it has a different name, either rename it or update `service_account_path` in `config.json`. |
+| `FileNotFoundError ... bookkeeping-sa.json` | The JSON file isn't where `config.json` says it is | Run `ls -la ~/.config/gcp/` — confirm the file is there with the exact name `bookkeeping-sa.json`. If it has a different name, either rename it or update `service_account_path` in `config.json`. |
 | `ImportError: No module named 'googleapiclient'` | You skipped or partially failed the `pip install` step | Re-run `pip install google-api-python-client google-auth`. If that fails, try `pip3` or `python3 -m pip install ...`. |
 | `config.json not found` | You skipped Step 10 | Run `cp config.example.json config.json` from inside the skill folder. |
 | `Expecting value: line 1 column 1` (JSON error) | Your `config.json` has smart quotes or is otherwise malformed | Re-open with TextEdit in plain-text mode (Format → Make Plain Text), or ask your AI agent to repair it. |
@@ -284,16 +292,16 @@ If your problem is not in this table: copy the **exact error text** and paste it
 |---|---|
 | Use a different sheet | Repeat Steps 5–9 on the new sheet (including the Share-with-service-account step), then update `sheet_id` and `worksheet` in `config.json`. |
 | Stop the skill writing to a sheet | Open the sheet → Share → find the service-account email → click trash icon → Save. The skill will get HTTP 403 on the next attempt. |
-| Move to a new computer | Repeat Parts 1, 2, and 4 on the new computer (re-clone, copy the JSON, copy `config.json`). Your sheet and its sharing don't change. |
-| You think your JSON file leaked | Message your admin immediately. They can revoke the key on the GCP side; nothing they revoke can come back to bite you afterwards. |
+| Move to a new computer | Repeat Parts 1, 2, and 4 on the new computer (re-clone, re-run `decrypt-key.sh`, copy `config.json`). Your sheet and its sharing don't change. |
+| You think the decrypted JSON or passphrase leaked | Message your admin immediately. They will rotate both the passphrase **and** the underlying GCP key; you'll then `git pull` + re-run `decrypt-key.sh` with the new passphrase. |
 
 ---
 
 # Summary of what just happened (so you understand what you set up)
 
 1. **Your computer** has the AutoACCT skill in `~/.openclaw/workspace/skills/AutoACCT/`. When you drop a receipt photo into your AI chat, the AI runs `scripts/append_row.py`, which is a small Python program.
-2. **The JSON file** at `~/.config/gcp/autoacct-sa.json` is the key that authenticates the Python program as a "service account" your admin created.
+2. **The repo ships an encrypted JSON file** (`secrets/bookkeeping-sa.json.enc`) — the service-account key locked with AES-256 + your team's passphrase. `decrypt-key.sh` unlocks it into `~/.config/gcp/bookkeeping-sa.json` (mode 600). The unlocked JSON authenticates the Python program as the service account your admin created in Google Cloud.
 3. **The service account** is allowed to edit Google Sheets only when those sheets have been shared with its email. You shared *your* sheet with it in Step 8 — so it can only write to your sheet (and any other sheet you might share with it later).
-4. **Other users on your team** have the **same JSON file** but their own sheets. The service account can write to each of their sheets only because each user has shared *their own* sheet with it. They cannot see your sheet, and you cannot see theirs.
+4. **Other users on your team** decrypt the **same JSON file** with the **same passphrase** but write to **their own sheets**. The service account can write to each of their sheets only because each user has shared *their own* sheet with it. They cannot see your sheet, and you cannot see theirs — unless someone explicitly shares.
 
 That's it. Welcome to AutoACCT.

@@ -16,7 +16,7 @@ Intended to be invoked manually inside OpenClaw today, and wired up to a WhatsAp
 
 ## Install (end users)
 
-Your admin will have given you **two things**: a service-account JSON key file (e.g. `autoacct-sa.json`) and a service-account email (e.g. `autoacct@your-project.iam.gserviceaccount.com`). If you don't have them, ask your admin first.
+The repo bundles the team's Google service-account key, encrypted with AES-256. Ask your admin for **one thing**: the passphrase (it's in your team's password manager).
 
 Follow the 4 steps below. Takes ~5 minutes.
 
@@ -26,18 +26,17 @@ Follow the 4 steps below. Takes ~5 minutes.
 
 ```bash
 git clone https://github.com/CharlesZhang2023/AutoACCT.git ~/.openclaw/workspace/skills/AutoACCT
+cd ~/.openclaw/workspace/skills/AutoACCT
 pip install google-api-python-client google-auth
 ```
 
-### Step 2 — Drop the admin's JSON key into `~/.config/gcp/`
+### Step 2 — Decrypt the bundled service-account key
 
 ```bash
-mkdir -p ~/.config/gcp
-mv ~/Downloads/autoacct-sa.json ~/.config/gcp/autoacct-sa.json
-chmod 600 ~/.config/gcp/autoacct-sa.json
+bash scripts/decrypt-key.sh
 ```
 
-(Replace `~/Downloads/autoacct-sa.json` with wherever you saved the file your admin sent.)
+You'll be prompted for the passphrase. On success the script writes the JSON to `~/.config/gcp/bookkeeping-sa.json` (mode 600) and prints the **service-account email** — copy it; you'll paste it into Step 3.
 
 ### Step 3 — Create your Google Sheet and share it with the service account
 
@@ -48,7 +47,7 @@ chmod 600 ~/.config/gcp/autoacct-sa.json
    ```
    Date	Merchant	Category	Amount	Currency	Amount (HKD)	FX Rate	FX Date	Payment Method	Line Items	Raw OCR	Note	Receipt	Logged At
    ```
-5. Click **Share** (top right) → paste the **service-account email** your admin gave you → role **Editor** → **Send** (you can uncheck "Notify people").
+5. Click **Share** (top right) → paste the **service-account email** that `decrypt-key.sh` printed in Step 2 → role **Editor** → **Send** (you can uncheck "Notify people").
 6. **Copy the full URL from your browser's address bar.** Something like:
    `https://docs.google.com/spreadsheets/d/1abc...xyz/edit#gid=0`
    (The script extracts the sheet ID for you — either the full URL or just the bare ID works.)
@@ -66,7 +65,7 @@ Open `config.json` and fill in **sheet_id** (paste the URL from Step 3.6) and **
 {
   "sheet_id": "https://docs.google.com/spreadsheets/d/1abc...xyz/edit",
   "worksheet": "Sheet1",
-  "service_account_path": "~/.config/gcp/autoacct-sa.json",
+  "service_account_path": "~/.config/gcp/bookkeeping-sa.json",
   "hkd_fx_provider": "frankfurter"
 }
 ```
@@ -85,11 +84,12 @@ If you hit an error, see [`scripts/setup.md`](scripts/setup.md) for troubleshoot
 
 ## Admin setup (one time, done by you before distributing)
 
-Before users can run the steps above, **you** (the admin) create one shared service account and distribute the JSON to users. See [`scripts/setup.md`](scripts/setup.md) for the full admin guide — short version:
+See [`scripts/setup.md`](scripts/setup.md) for the full admin guide and [`secrets/README.md`](secrets/README.md) for the encryption mechanics. Short version:
 
 1. Create a GCP project, enable Sheets API, create a service account, download the JSON key.
-2. Distribute the JSON file + the service-account email to your users via a secure channel (1Password / Bitwarden / encrypted email — **never commit to git**).
-3. Tell users to follow the 4 steps above.
+2. Encrypt the JSON with a strong random passphrase and commit `secrets/bookkeeping-sa.json.enc` to the repo (see `secrets/README.md` for the openssl one-liner).
+3. Store the passphrase in your team password manager. Tell users to follow the 4 install steps above.
+4. Rotate the passphrase when team members leave; rotate the underlying GCP key when the passphrase or any decrypted JSON might have leaked.
 
 ## Use
 
@@ -105,10 +105,13 @@ Caption is optional; use it to add context (payment method, split, category hint
 | `categories.md`           | Fixed category list (14 categories)                  |
 | `schema.md`               | Google Sheet column order (A–N)                      |
 | `config.example.json`     | Template → copy to `config.json` (gitignored)        |
-| `scripts/fx_convert.py`   | Currency → HKD via frankfurter.app                   |
-| `scripts/append_row.py`   | Writes one row to Google Sheets                      |
-| `scripts/setup.md`        | Admin setup guide + troubleshooting                  |
-| `DEPLOY.md`               | Step-by-step install guide for non-technical users   |
+| `scripts/fx_convert.py`         | Currency → HKD via frankfurter.app                   |
+| `scripts/append_row.py`         | Writes one row to Google Sheets                      |
+| `scripts/decrypt-key.sh`        | Decrypts bundled SA key to `~/.config/gcp/`          |
+| `scripts/setup.md`              | Admin setup guide + troubleshooting                  |
+| `secrets/bookkeeping-sa.json.enc` | Team SA key, AES-256 encrypted (safe to commit)   |
+| `secrets/README.md`             | How the encryption works + rotation procedures        |
+| `DEPLOY.md`                     | Step-by-step install guide for non-technical users   |
 
 ## License
 
